@@ -33,9 +33,8 @@ impl Drop for CudaMemPool {
         if self.owned {
             let pool = std::mem::replace(&mut self.pool, std::ptr::null_mut());
             if !pool.is_null() {
-                self.ctx.record_err(self.ctx.bind_to_thread());
-                self.ctx
-                    .record_err(unsafe { result::mem_pool::destroy(pool) });
+                let res = self.ctx.bind_to_thread().and_then(|()| unsafe { result::mem_pool::destroy(pool) });
+                self.ctx.record_err(res);
             }
         }
     }
